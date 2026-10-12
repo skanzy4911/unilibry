@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Sign in to your UNILIBRY account.">
+    <title>Log in | UNILIBRY</title>
+    <style>
+        :root {
+            font-family: Arial, sans-serif;
+            color: #18312b;
+            background: #f3f7f5;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            display: grid;
+            min-height: 100vh;
+            place-items: center;
+            margin: 0;
+            padding: 24px;
+        }
+
+        .login-card {
+            width: min(100%, 420px);
+            padding: clamp(24px, 6vw, 40px);
+            border: 1px solid #dce8e2;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 12px 35px #173d2c12;
+        }
+
+        .brand {
+            display: inline-block;
+            margin-bottom: 28px;
+            color: #176b50;
+            font-size: 1.15rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        h1 { margin: 0 0 8px; font-size: 1.8rem; }
+        .intro { margin: 0 0 24px; color: #52645d; line-height: 1.5; }
+        label { display: block; margin: 16px 0 7px; font-size: .9rem; font-weight: 700; }
+
+        input {
+            width: 100%;
+            min-height: 46px;
+            padding: 11px 12px;
+            border: 1px solid #bdcec5;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        input:focus-visible, button:focus-visible, a:focus-visible {
+            outline: 3px solid #7bc9a9;
+            outline-offset: 2px;
+        }
+
+        button {
+            width: 100%;
+            min-height: 46px;
+            margin-top: 22px;
+            border: 0;
+            border-radius: 8px;
+            background: #176b50;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover { background: #12583f; }
+        .notice { min-height: 1.4em; margin: 14px 0 0; color: #a3342c; font-size: .9rem; }
+        .recovery-link { display: block; margin-top: 16px; color: #176b50; font-size: .9rem; text-align: right; }
+        .recovery-note { margin: 0 0 20px; color: #52645d; line-height: 1.5; }
+        .recovery-notice { min-height: 1.4em; margin: 14px 0 0; color: #34483f; font-size: .9rem; }
+        .back { display: block; margin-top: 22px; color: #176b50; font-size: .9rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <main class="login-card">
+        <a class="brand" href="index.html">UNILIBRY</a>
+        <h1>Welcome back</h1>
+        <p class="intro">Enter your account details to log in.</p>
+
+        <form id="login-form">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="username" placeholder="you@example.com" required>
+
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+
+            <button type="submit">Login</button>
+            <p class="notice" id="notice" role="status" aria-live="polite"></p>
+            <a class="recovery-link" id="show-recovery" href="#forgot-password">Forgot password?</a>
+        </form>
+
+        <section id="recovery" hidden aria-labelledby="recovery-title">
+            <h1 id="recovery-title" tabindex="-1">Reset your password</h1>
+            <p class="recovery-note">Enter the email address associated with your account.</p>
+            <form id="recovery-form">
+                <label for="recovery-email">Email address</label>
+                <input id="recovery-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+                <button type="submit">Request password reset</button>
+                <p class="recovery-notice" id="recovery-notice" role="status" aria-live="polite"></p>
+            </form>
+            <a class="back" id="show-login" href="#login">Back to log in</a>
+        </section>
+
+        <a class="back" href="index.html">Back to home</a>
+    </main>
+    <script type="module">
+        import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+        import { auth, authErrorMessage } from "./firebase.js";
+
+        const loginForm = document.querySelector("#login-form");
+        const recovery = document.querySelector("#recovery");
+        const notice = document.querySelector("#notice");
+        const recoveryNotice = document.querySelector("#recovery-notice");
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                window.location.replace("dashboard.html");
+            }
+        });
+
+        loginForm.addEventListener("submit", async event => {
+            event.preventDefault();
+            notice.textContent = "";
+
+            const email = document.querySelector("#email").value.trim();
+            const password = document.querySelector("#password").value;
+            const submitButton = loginForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = "Logging in...";
+            notice.textContent = "Connecting to Firebase...";
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.replace("dashboard.html");
+            } catch (error) {
+                notice.textContent = authErrorMessage(error);
+                submitButton.disabled = false;
+                submitButton.textContent = "Login";
+            }
+        });
+
+        document.querySelector("#show-recovery").addEventListener("click", event => {
+            event.preventDefault();
+            document.querySelector("#recovery-email").value = document.querySelector("#email").value;
+            loginForm.hidden = true;
+            recovery.hidden = false;
+            document.querySelector("#recovery-title").focus();
+        });
+
+        document.querySelector("#show-login").addEventListener("click", event => {
+            event.preventDefault();
+            recovery.hidden = true;
+            loginForm.hidden = false;
+            document.querySelector("#email").focus();
+        });
+
+        document.querySelector("#recovery-form").addEventListener("submit", async event => {
+            event.preventDefault();
+            recoveryNotice.textContent = "";
+            const email = document.querySelector("#recovery-email").value.trim();
+            const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = "Sending...";
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                recoveryNotice.textContent = "If an account exists for that email, a password reset email has been sent.";
+            } catch (error) {
+                recoveryNotice.textContent = authErrorMessage(error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = "Request password reset";
+            }
+        });
+    </script>
+</body>
+</html>

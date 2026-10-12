@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Calculate your CGPA from course credit units and grade points.">
+    <title>CGPA Calculator</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Arial, sans-serif;
+            color: #18312b;
+            background: #f3f7f5;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 32px 16px;
+        }
+
+        main {
+            width: min(100%, 720px);
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 18px;
+            color: #176b50;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .calculator {
+            padding: clamp(20px, 5vw, 40px);
+            background: #fff;
+            border: 1px solid #dce8e2;
+            border-radius: 18px;
+            box-shadow: 0 12px 35px #173d2c12;
+        }
+
+        h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 5vw, 2.4rem); }
+        .intro { margin: 0 0 26px; color: #52645d; line-height: 1.5; }
+        h2 { margin: 0 0 12px; font-size: 1.1rem; }
+
+        .course {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 110px 120px 42px;
+            align-items: end;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        label { display: block; color: #42564e; font-size: .85rem; font-weight: 700; }
+        input {
+            width: 100%;
+            min-height: 44px;
+            margin-top: 6px;
+            padding: 9px 11px;
+            border: 1px solid #bdcec5;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        input:focus, button:focus-visible, a:focus-visible {
+            outline: 3px solid #7bc9a9;
+            outline-offset: 2px;
+        }
+
+        button {
+            min-height: 42px;
+            padding: 9px 14px;
+            border: 0;
+            border-radius: 8px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .remove {
+            min-height: 44px;
+            padding: 8px;
+            background: #fbe9e7;
+            color: #a3342c;
+            font-size: 1.1rem;
+        }
+
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+        .add { background: #e7f4ed; color: #176b50; }
+        .calculate { background: #176b50; color: #fff; }
+        .reset { background: #edf1ef; color: #34483f; }
+
+        .result {
+            margin-top: 24px;
+            padding: 18px;
+            border-radius: 12px;
+            background: #eff8f3;
+            text-align: center;
+        }
+
+        .result-label { margin: 0 0 4px; color: #52645d; }
+        output { color: #176b50; font-size: 2.5rem; font-weight: 800; }
+        .summary { margin: 6px 0 0; color: #52645d; font-size: .9rem; }
+        .hint { margin: 16px 0 0; color: #52645d; font-size: .85rem; line-height: 1.5; }
+        .error { min-height: 1.3em; margin: 12px 0 0; color: #a3342c; font-size: .9rem; }
+
+        @media (max-width: 540px) {
+            .course { grid-template-columns: minmax(0, 1fr) minmax(78px, .65fr) minmax(90px, .75fr) 40px; gap: 7px; }
+            input { padding: 8px; }
+            label { font-size: .76rem; }
+        }
+
+        @media (max-width: 390px) {
+            body { padding: 20px 10px; }
+            .course { grid-template-columns: 1fr 1fr 40px; }
+            .course-name { grid-column: 1 / -1; }
+            .remove { grid-column: 3; grid-row: 2; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <a class="back-link" href="dashboard.html">← Back to home</a>
+        <section class="calculator" aria-labelledby="page-title">
+            <h1 id="page-title">CGPA Calculator</h1>
+            <p class="intro">Enter each course’s credit units and grade points to calculate your cumulative GPA.</p>
+
+            <h2>Courses</h2>
+            <div id="courses" aria-label="Course details"></div>
+
+            <div class="actions">
+                <button class="add" id="add-course" type="button">+ Add course</button>
+                <button class="calculate" id="calculate" type="button">Calculate CGPA</button>
+                <button class="reset" id="reset" type="button">Reset</button>
+            </div>
+
+            <p class="error" id="error" role="alert"></p>
+            <div class="result" aria-live="polite">
+                <p class="result-label">Your CGPA</p>
+                <output id="cgpa" for="courses">—</output>
+                <p class="summary" id="summary">Enter your courses, then calculate.</p>
+            </div>
+            <p class="hint">Calculation: total (credit units × grade points) ÷ total credit units. Use your school’s grade-point scale; this calculator accepts points from 0 to 5.</p>
+        </section>
+    </main>
+
+    <script>
+        const courses = document.querySelector("#courses");
+        const cgpa = document.querySelector("#cgpa");
+        const summary = document.querySelector("#summary");
+        const error = document.querySelector("#error");
+
+        function addCourse(name = "", credits = "", points = "") {
+            const row = document.createElement("div");
+            row.className = "course";
+            row.innerHTML = `
+                <label class="course-name">Course
+                    <input class="name" type="text" placeholder="e.g. Biology" value="${name}" aria-label="Course name">
+                </label>
+                <label>Credits
+                    <input class="credits" type="number" min="0.1" step="0.1" placeholder="3" value="${credits}" aria-label="Credit units" required>
+                </label>
+                <label>Grade points
+                    <input class="points" type="number" min="0" max="5" step="0.1" placeholder="4" value="${points}" aria-label="Grade points (0 to 5)" required>
+                </label>
+                <button class="remove" type="button" aria-label="Remove course">×</button>
+            `;
+            row.querySelector(".remove").addEventListener("click", () => {
+                row.remove();
+                calculate();
+            });
+            courses.append(row);
+        }
+
+        function calculate() {
+            const rows = [...courses.querySelectorAll(".course")];
+            let totalCredits = 0;
+            let totalPoints = 0;
+
+            for (const row of rows) {
+                const credits = Number(row.querySelector(".credits").value);
+                const points = Number(row.querySelector(".points").value);
+
+                if (!Number.isFinite(credits) || credits <= 0 || !Number.isFinite(points) || points < 0 || points > 5) {
+                    error.textContent = "Enter credit units greater than 0 and grade points from 0 to 5 for every course.";
+                    cgpa.textContent = "—";
+                    summary.textContent = "Check the highlighted course details.";
+                    return;
+                }
+
+                totalCredits += credits;
+                totalPoints += credits * points;
+            }
+
+            if (rows.length === 0) {
+                error.textContent = "Add at least one course to calculate your CGPA.";
+                cgpa.textContent = "—";
+                summary.textContent = "No courses entered.";
+                return;
+            }
+
+            error.textContent = "";
+            cgpa.textContent = (totalPoints / totalCredits).toFixed(2);
+            summary.textContent = `Based on ${rows.length} ${rows.length === 1 ? "course" : "courses"} and ${totalCredits} total credit units.`;
+        }
+
+        document.querySelector("#add-course").addEventListener("click", () => addCourse());
+        document.querySelector("#calculate").addEventListener("click", calculate);
+        document.querySelector("#reset").addEventListener("click", () => {
+            courses.replaceChildren();
+            addCourse();
+            addCourse();
+            cgpa.textContent = "—";
+            summary.textContent = "Enter your courses, then calculate.";
+            error.textContent = "";
+        });
+
+        addCourse();
+        addCourse();
+    </script>
+</body>
+</html>

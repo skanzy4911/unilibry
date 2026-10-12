@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Create a UNILIBRY student account.">
+    <title>Create account | UNILIBRY</title>
+    <style>
+        :root {
+            font-family: Arial, sans-serif;
+            color: #18312b;
+            background: #f3f7f5;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            display: grid;
+            min-height: 100vh;
+            place-items: center;
+            margin: 0;
+            padding: 24px;
+        }
+
+        .signup-card {
+            width: min(100%, 440px);
+            padding: clamp(24px, 6vw, 40px);
+            border: 1px solid #dce8e2;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 12px 35px #173d2c12;
+        }
+
+        .brand {
+            display: inline-block;
+            margin-bottom: 28px;
+            color: #176b50;
+            font-size: 1.15rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        h1 { margin: 0 0 8px; font-size: 1.8rem; }
+        .intro { margin: 0 0 24px; color: #52645d; line-height: 1.5; }
+        label { display: block; margin: 16px 0 7px; font-size: .9rem; font-weight: 700; }
+
+        input {
+            width: 100%;
+            min-height: 46px;
+            padding: 11px 12px;
+            border: 1px solid #bdcec5;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        input:focus-visible, button:focus-visible, a:focus-visible {
+            outline: 3px solid #7bc9a9;
+            outline-offset: 2px;
+        }
+
+        button {
+            width: 100%;
+            min-height: 46px;
+            margin-top: 22px;
+            border: 0;
+            border-radius: 8px;
+            background: #176b50;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover { background: #12583f; }
+        .notice { min-height: 1.4em; margin: 14px 0 0; color: #a3342c; font-size: .9rem; }
+        .back { display: block; margin-top: 20px; color: #176b50; font-size: .9rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <main class="signup-card">
+        <a class="brand" href="index.html">UNILIBRY</a>
+        <h1>Create your account</h1>
+        <p class="intro">Sign up to get started with UNILIBRY.</p>
+
+        <form id="signup-form">
+            <label for="name">Full name</label>
+            <input id="name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
+
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required>
+
+            <label for="confirm-password">Confirm password</label>
+            <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" minlength="8" placeholder="Enter your password again" required>
+
+            <button type="submit">Create account</button>
+            <p class="notice" id="notice" role="status" aria-live="polite"></p>
+        </form>
+
+        <a class="back" href="login.html">Already have an account? Log in</a>
+        <a class="back" href="index.html">Back to home</a>
+    </main>
+    <script type="module">
+        import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+        import { auth, authErrorMessage } from "./firebase.js";
+
+        const form = document.querySelector("#signup-form");
+        const notice = document.querySelector("#notice");
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+            notice.textContent = "";
+
+            const name = document.querySelector("#name").value.trim();
+            const email = document.querySelector("#email").value.trim();
+            const password = document.querySelector("#password").value;
+            const confirmPassword = document.querySelector("#confirm-password").value;
+
+            if (password !== confirmPassword) {
+                notice.textContent = "The passwords do not match.";
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Creating account...";
+            notice.textContent = "Connecting to Firebase...";
+            try {
+                const credential = await createUserWithEmailAndPassword(auth, email, password);
+                await updateProfile(credential.user, { displayName: name });
+                window.location.replace("dashboard.html");
+            } catch (error) {   
+                notice.textContent = authErrorMessage(error);
+                submitButton.disabled = false;
+                submitButton.textContent = "Create account";
+            }
+        });
+    </script>
+</body>
+</html>

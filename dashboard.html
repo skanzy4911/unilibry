@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>UNILIBRY</title>
+    <link rel="stylesheets" href="">
+    <style>
+        img{
+            width: 1350px;
+            align-items: center;
+            height: 200px;
+            border-radius: 50%;;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        h1{
+            color: white;
+            text-align: center;
+            background-color: #18312b;
+        }
+        .sites ul{
+            list-style-type: none;
+            background-color: #437468;
+            margin: 0%;
+            padding: 0%;
+            overflow: hidden;
+        }
+        .sites a{
+            color: #f7f3f3;
+            text-decoration: none;
+            padding: 20px;
+            display: block;
+            text-align: center;
+            gap: 25px;
+
+        }
+        .sites a:hover{
+            background-color: black;
+        }
+        .sites li{
+            float: calc(dashboard);
+            text-align: justify;
+        }
+        h2{
+            text-align: center;
+            background-color: #437468;
+            color: #fcfcfd;
+            border: #fa0404;
+            font-weight: 100;
+            font: serif;
+        }
+        p{
+            text-align: justify;
+            border-radius: 20px,1opx;
+            transition: all;
+            text-emphasis: all;
+
+        }
+        a{
+            text-align: justify;
+            border-radius: 20px,1opx; 
+             
+        }
+
+        .account-bar{
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .account-bar button{
+            padding: 8px 12px;
+            border: 0;
+            border-radius: 6px;
+            background: #176b50;
+            color: white;
+            font: inherit;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+    <p id="auth-loading" role="status">Checking your sign-in...</p>
+    <p id="auth-error" role="alert" hidden>We couldn't verify your sign-in. Please <a href="login.html">log in</a> and try again.</p>
+    <main id="dashboard-content" hidden>
+        <div class="account-bar">
+            <span id="signed-in-user"></span>
+            <button id="sign-out" type="button">Sign out</button>
+        </div>
+        <h1>UNILIBRY</h1>
+        <img src="files/log (1).jpg" alt="UNILIBRY Logo">
+        <nav class="sites">
+            <div class="sites">Check out</div>
+            <ul>
+                <li><a href=" ">Home</a></li>
+                <li><a href="About.html">About</a></li>
+                <li><a href="https://www.openlibrary.org">OpenLibrary</a></li>
+                <li><a href="calc.html">CGPA Calc</a></li>
+                <li><a href="https://www.google.com">Google</a></li>
+                <li><a href="pdfs.html">Access PDFs</a></li>
+            </ul>
+        </nav>
+        <p>This is an Educational ground build up of great tools to build your academic pursues with great promises for a grater future and world at large</p>
+        <p>This site is build with the aim to make study life an easy go by ensuring to make available all the tools needed by a students, researchers, teachers and learners of various fields and clans</p>
+        <ul>
+            <li>
+                <address>
+                    <div>
+                        <a href="mailto:skanzyofficial@gmail.com">Contact us</a>
+                    </div>
+                </address>
+            </li>
+        </ul>
+    </main>
+    <script type="module">
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+        import { auth, authErrorMessage } from "./firebase.js";
+
+        const loading = document.querySelector("#auth-loading");
+        const errorNotice = document.querySelector("#auth-error");
+        const dashboard = document.querySelector("#dashboard-content");
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                window.location.replace("login.html");
+                return;
+            }
+
+            loading.hidden = true;
+            dashboard.hidden = false;
+            document.querySelector("#signed-in-user").textContent =
+                `Signed in as ${user.displayName || user.email}`;
+        }, error => {
+            console.error("Unable to verify the Firebase sign-in state.", error);
+            loading.hidden = true;
+            errorNotice.hidden = false;
+        });
+
+        document.querySelector("#sign-out").addEventListener("click", async () => {
+            const signOutButton = document.querySelector("#sign-out");
+            signOutButton.disabled = true;
+            signOutButton.textContent = "Signing out...";
+            try {
+                await signOut(auth);
+                window.location.replace("login.html");
+            } catch (error) {
+                console.error("Unable to sign out.", error);
+                errorNotice.textContent = `Unable to sign out: ${authErrorMessage(error)}`;
+                errorNotice.hidden = false;
+                signOutButton.disabled = false;
+                signOutButton.textContent = "Sign out";
+            }
+        });
+    </script>
+</body>
+</html>
