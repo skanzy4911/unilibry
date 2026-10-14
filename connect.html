@@ -1,128 +1,120 @@
 <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>UNILIBRY Connect - Complete</title>
+<title>UNILIBRY Connect</title>
 <style>
-body{margin:0;font-family:Arial;background:#f0f2f5}
-.header{background:#0a3d62;color:white;padding:10px 15px;position:sticky;top:0;z-index:20;display:flex;justify-content:space-between}
-.header a{color:#ffdd57;text-decoration:none;margin-left:8px}
-.box{max-width:700px;margin:10px auto;background:white;padding:14px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-input,textarea{width:100%;padding:9px;border-radius:10px;border:1px solid #ccc;box-sizing:border-box;margin:5px 0}
-button{cursor:pointer;border:none;border-radius:20px;padding:6px 12px;font-weight:bold}
-.mainBtn{background:#0a3d62;color:white;width:100%;padding:12px}
-.post{border-bottom:1px solid #eee;padding:12px 0}
-.actionBar{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
-.actionBtn{background:#f0f2f5;color:#333;padding:5px 10px;font-size:12px}
-.actionBtn.liked{background:#ff4757;color:white}
-.smallBtn{font-size:10px;padding:3px 8px;margin-left:4px}
-.tabBar{display:flex;gap:6px;margin-bottom:8px}
-.tab{flex:1;padding:7px;text-align:center;border-radius:20px;border:1px solid #0a3d62;cursor:pointer;font-size:13px}
-.tab.active{background:#0a3d62;color:white}
-.time{font-size:10px;color:gray}
-.commentBox{margin-top:8px;background:#f8f9fa;padding:8px;border-radius:10px}
-.comment{padding:6px 0;border-bottom:1px solid #e9e9e9;font-size:13px}
-.reply{margin-left:20px;border-left:2px solid #0a3d62;padding-left:8px;margin-top:4px}
-.commentInput{display:flex;gap:5px;margin-top:6px}
-.commentInput input{flex:1}
-.badge{background:red;color:white;border-radius:50%;padding:2px 6px;font-size:11px}
-.reshared{border-left:3px solid #0a3d62;padding-left:8px;background:#f9f9f9;margin-top:5px;border-radius:6px}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial;background:#eef2f7}
+.top{background:linear-gradient(135deg,#0a3d62,#2c8ac0);color:white;padding:14px 18px;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center}
+.top a{color:#ffe082;text-decoration:none;margin-left:12px;font-weight:600}
+.wrap{max-width:680px;margin:0 auto;padding:12px}
+.card{background:white;border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+input,textarea{width:100%;border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:12px;padding:12px;margin:6px 0;outline:none}
+input:focus,textarea:focus{border-color:#2c8ac0;background:white}
+.postBtn{background:linear-gradient(135deg,#0a3d62,#2c8ac0);color:white;border:none;width:100%;padding:13px;border-radius:25px;font-weight:700;font-size:15px;cursor:pointer;margin-top:6px}
+.post{padding:14px 0;border-bottom:1px solid #f1f5f9}
+.post:last-child{border:none}
+.pfp{width:38px;height:38px;border-radius:50%;background:#0a3d62;color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:700;margin-right:8px}
+.btnRow{display:flex;gap:8px;margin-top:10px}
+.act{background:#f1f5f9;border:none;border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer}
+.act.liked{background:#ff4757;color:white}
+.small{font-size:11px;padding:4px 9px;border-radius:14px;border:1px solid #e2e8f0;background:white;cursor:pointer;margin-left:5px}
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tab{flex:1;text-align:center;padding:9px;border-radius:20px;border:1px solid #cbd5e1;background:white;cursor:pointer;font-size:13px}
+.tab.active{background:#0a3d62;color:white;border-color:#0a3d62}
+.commentWrap{background:#f8fafc;border-radius:12px;padding:8px;margin-top:8px}
+.comment{font-size:13px;padding:5px 0;border-bottom:1px dashed #e2e8f0}
+.reply{margin-left:18px;border-left:2px solid #2c8ac0;padding-left:8px;margin-top:4px}
+.flex{display:flex;gap:6px;margin-top:6px}
+.flex input{flex:1}
+.time{font-size:11px;color:#94a3b8}
 </style></head><body>
-<div class="header"><div><b>UNILIBRY 2.0</b></div><div><a href="dashboard.html">Library</a> <a href="#" onclick="showFriends()">👥<span id="reqBadge"></span></a></div></div>
+<div class="top"><div><b>UNILIBRY</b> 💬</div><div><a href="dashboard.html">Library</a><a href="profile.html">Profile</a></div></div>
 
-<div class="box">
-<input id="nameInput" placeholder="Name - School e.g. Musa - UniJos">
-<textarea id="textInput" placeholder="What's happening?"></textarea>
-<input type="file" id="fileInput" accept="image/*,.pdf,.doc">
-<button class="mainBtn" onclick="makePost()" id="postBtn">Post 🚀</button>
+<div class="wrap">
+<div class="card">
+<input id="nameInput" placeholder="Your name - e.g Musa - UniJos">
+<textarea id="textInput" placeholder="Wetin you wan share today?"></textarea>
+<input type="file" id="fileInput" accept="image/*,.pdf">
+<button class="postBtn" onclick="makePost()" id="postBtn">Post to all schools 🚀</button>
+<p id="msg" style="font-size:12px;color:green"></p>
 </div>
 
-<div class="box" id="friendBox" style="display:none"><h3>Friend Requests</h3><div id="friendReqs"></div><h3>My Friends</h3><div id="friendList"></div><button onclick="hideFriends()">Close</button></div>
-
-<div class="box">
-<div class="tabBar"><div class="tab active" id="tAll" onclick="setTab('all')">All</div><div class="tab" id="tFriend" onclick="setTab('friends')">Friends</div><div class="tab" id="tFollowing" onclick="setTab('following')">Following</div></div>
-<div id="feed">Loading...</div>
+<div class="card">
+<div class="tabs">
+<div class="tab active" id="tAll" onclick="setTab('all')">All</div>
+<div class="tab" id="tFriends" onclick="setTab('friends')">Friends</div>
+<div class="tab" id="tFollow" onclick="setTab('following')">Following</div>
+</div>
+<div id="feed">Loading jeje...</div>
+</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, where, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-const firebaseConfig = { apiKey:"YOUR_API_KEY_HERE", authDomain:"unilibry.firebaseapp.com", projectId:"unilibry", storageBucket:"unilibry.appspot.com", messagingSenderId:"...", appId:"..." };
+const firebaseConfig = { apiKey:"YOUR_API_KEY", authDomain:"unilibry.firebaseapp.com", projectId:"unilibry", storageBucket:"unilibry.appspot.com", messagingSenderId:"...", appId:"..." };
 const app=initializeApp(firebaseConfig); const db=getFirestore(app); const storage=getStorage(app);
 
-const nameInput=document.getElementById('nameInput'), textInput=document.getElementById('textInput'), fileInput=document.getElementById('fileInput'), feedDiv=document.getElementById('feed');
+const nameInput=document.getElementById('nameInput'), textInput=document.getElementById('textInput'), fileInput=document.getElementById('fileInput'), feed=document.getElementById('feed');
 nameInput.value=localStorage.getItem('unilibry_name')||''; nameInput.oninput=()=>localStorage.setItem('unilibry_name',nameInput.value);
+let allPosts=[], likes=[], follows=[], friends=[], comments=[], tab='all';
+const myName=()=>nameInput.value.trim();
 
-let allPosts=[], likes=[], follows=[], friends=[], comments=[], currentTab='all';
-
-function getMyName(){ return nameInput.value.trim(); }
-window.setTab=(t)=>{ currentTab=t; document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active')); document.getElementById(t==='all'?'tAll':t==='friends'?'tFriend':'tFollowing').classList.add('active'); render(); };
-window.showFriends=()=>document.getElementById('friendBox').style.display='block';
-window.hideFriends=()=>document.getElementById('friendBox').style.display='none';
+window.setTab=(t)=>{ tab=t; document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active')); document.getElementById(t==='all'?'tAll':t==='friends'?'tFriends':'tFollow').classList.add('active'); render(); };
 
 onSnapshot(query(collection(db,'connect_posts'), orderBy('createdAt','desc')), s=>{ allPosts=[]; s.forEach(d=>allPosts.push({id:d.id,...d.data()})); render(); });
-onSnapshot(collection(db,'likes'), s=>{ likes=[]; s.forEach(d=>likes.push({...d.data(), id:d.id})); render(); });
+onSnapshot(collection(db,'likes'), s=>{ likes=[]; s.forEach(d=>likes.push({...d.data(),id:d.id})); render(); });
 onSnapshot(collection(db,'follows'), s=>{ follows=[]; s.forEach(d=>follows.push(d.data())); });
-onSnapshot(collection(db,'friends'), s=>{ friends=[]; s.forEach(d=>friends.push({id:d.id,...d.data()})); render(); renderFriends(); });
+onSnapshot(collection(db,'friends'), s=>{ friends=[]; s.forEach(d=>friends.push({id:d.id,...d.data()})); render(); });
 onSnapshot(query(collection(db,'post_comments'), orderBy('createdAt','asc')), s=>{ comments=[]; s.forEach(d=>comments.push({id:d.id,...d.data()})); render(); });
 
-function renderFriends(){
-  const myName=getMyName(); if(!myName) return;
-  const reqs=friends.filter(f=>f.to===myName && f.status==='pending');
-  document.getElementById('reqBadge').innerHTML= reqs.length? `<span class="badge">${reqs.length}</span>`:'';
-  let h=''; reqs.forEach(r=>{ h+=`<div>${r.from} <button class="smallBtn" onclick="acceptF('${r.id}')">Accept</button> <button class="smallBtn" onclick="rejectF('${r.id}')">Reject</button></div>`; });
-  document.getElementById('friendReqs').innerHTML=h||'No requests';
-  const myFriends=friends.filter(f=> (f.from===myName||f.to===myName)&&f.status==='accepted').map(f=> f.from===myName? f.to: f.from);
-  document.getElementById('friendList').innerHTML= myFriends.join(', ')||'No friends';
-}
-window.acceptF=async(id)=>{ await updateDoc(doc(db,'friends',id),{status:'accepted'}); };
-window.rejectF=async(id)=>{ await deleteDoc(doc(db,'friends',id)); };
-window.addFriend=async(t)=>{ const m=getMyName(); if(!m){alert('Put name');return;} if(m===t)return; if(friends.find(f=> (f.from===m&&f.to===t)||(f.from===t&&f.to===m))) {alert('Already sent');return;} await addDoc(collection(db,'friends'),{from:m,to:t,status:'pending',createdAt:serverTimestamp()}); alert('Request sent to '+t); };
-window.toggleFollow=async(t)=>{ const m=getMyName(); if(!m)return; const q=query(collection(db,'follows'),where('follower','==',m),where('following','==',t)); const s=await getDocs(q); if(!s.empty){for(const d of s.docs) await deleteDoc(doc(db,'follows',d.id));} else {await addDoc(collection(db,'follows'),{follower:m,following:t,createdAt:serverTimestamp()});} };
-window.toggleLike=async(pid)=>{ const m=getMyName(); if(!m){alert('Put name');return;} const q=query(collection(db,'likes'),where('postId','==',pid),where('user','==',m)); const s=await getDocs(q); if(!s.empty){for(const d of s.docs) await deleteDoc(doc(db,'likes',d.id));} else {await addDoc(collection(db,'likes'),{postId:pid,user:m,createdAt:serverTimestamp()});} };
-window.reshare=async(pid)=>{ const m=getMyName(); if(!m){alert('Put name');return;} const o=allPosts.find(p=>p.id===pid); await addDoc(collection(db,'connect_posts'),{name:m,reshareOf:o.name,reshareText:o.text,reshareFile:o.fileUrl,reshareFileType:o.fileType,reshareFileName:o.fileName,originalId:pid,createdAt:serverTimestamp()}); };
-window.makePost=async()=>{ const m=getMyName(); const t=textInput.value.trim(); const f=fileInput.files[0]; if(!m){alert('Put name');return;} if(!t&&!f){alert('Write or file');return;} document.getElementById('postBtn').disabled=true; let url='', ftype='', fname=''; try{ if(f){fname=f.name; ftype=f.type; const r=ref(storage,'connect_files/'+Date.now()+'_'+fname); await uploadBytes(r,f); url=await getDownloadURL(r);} await addDoc(collection(db,'connect_posts'),{name:m,text:t,fileUrl:url,fileType:ftype,fileName:fname,createdAt:serverTimestamp()}); textInput.value=''; fileInput.value=''; }catch(e){alert(e.message);} document.getElementById('postBtn').disabled=false; };
+window.makePost=async()=>{
+  const name=myName(); const txt=textInput.value.trim(); const file=fileInput.files[0];
+  if(!name){alert('Put name first jeje');return;} if(!txt&&!file){alert('Write something');return;}
+  document.getElementById('postBtn').disabled=true; document.getElementById('msg').innerText='Posting...';
+  let url='', type='', fname=''; try{
+    if(file){ fname=file.name; type=file.type; const r=ref(storage,'connect/'+Date.now()+'_'+fname); await uploadBytes(r,file); url=await getDownloadURL(r); }
+    await addDoc(collection(db,'connect_posts'),{name,text:txt,fileUrl:url,fileType:type,fileName:fname,createdAt:serverTimestamp()});
+    textInput.value=''; fileInput.value=''; document.getElementById('msg').innerText='Posted ✅';
+  }catch(e){alert(e.message);} document.getElementById('postBtn').disabled=false; setTimeout(()=>document.getElementById('msg').innerText='',2000);
+};
 
-window.addComment=async(postId)=>{
-  const m=getMyName(); if(!m){alert('Put name first');return;}
-  const input=document.getElementById('cInput_'+postId); const text=input.value.trim(); if(!text)return;
-  await addDoc(collection(db,'post_comments'),{postId, user:m, text, parentId:null, createdAt:serverTimestamp()}); input.value='';
-};
-window.addReply=async(postId, parentId)=>{
-  const m=getMyName(); if(!m){alert('Put name');return;}
-  const input=document.getElementById('rInput_'+parentId); const text=input.value.trim(); if(!text)return;
-  await addDoc(collection(db,'post_comments'),{postId, user:m, text, parentId, createdAt:serverTimestamp()}); input.value=''; document.getElementById('replyBox_'+parentId).style.display='none';
-};
-window.toggleReplyBox=(cid)=>{ const b=document.getElementById('replyBox_'+cid); b.style.display= b.style.display==='none'?'flex':'none'; };
+window.like=async(id)=>{ const m=myName(); if(!m){alert('Put name');return;} const q=query(collection(db,'likes'),where('postId','==',id),where('user','==',m)); const s=await getDocs(q); if(!s.empty){for(const d of s.docs) await deleteDoc(doc(db,'likes',d.id));} else {await addDoc(collection(db,'likes'),{postId:id,user:m,createdAt:serverTimestamp()});} };
+window.follow=async(t)=>{ const m=myName(); if(!m)return; const q=query(collection(db,'follows'),where('follower','==',m),where('following','==',t)); const s=await getDocs(q); if(!s.empty){for(const d of s.docs) await deleteDoc(doc(db,'follows',d.id));} else {await addDoc(collection(db,'follows'),{follower:m,following:t,createdAt:serverTimestamp()});} };
+window.addFriend=async(t)=>{ const m=myName(); if(!m||m===t)return; if(friends.find(f=> (f.from===m&&f.to===t)||(f.from===t&&f.to===m))) {alert('Request don dey already');return;} await addDoc(collection(db,'friends'),{from:m,to:t,status:'pending',createdAt:serverTimestamp()}); alert('Friend request sent to '+t); };
+window.reshare=async(id)=>{ const m=myName(); const o=allPosts.find(p=>p.id===id); await addDoc(collection(db,'connect_posts'),{name:m,reshareOf:o.name,reshareText:o.text,reshareFile:o.fileUrl,reshareFileType:o.fileType,reshareFileName:o.fileName,createdAt:serverTimestamp()}); };
+window.comment=async(postId)=>{ const m=myName(); const inp=document.getElementById('ci_'+postId); const t=inp.value.trim(); if(!t)return; await addDoc(collection(db,'post_comments'),{postId,user:m,text:t,parentId:null,createdAt:serverTimestamp()}); inp.value=''; };
+window.reply=async(postId,parentId)=>{ const m=myName(); const inp=document.getElementById('ri_'+parentId); const t=inp.value.trim(); if(!t)return; await addDoc(collection(db,'post_comments'),{postId,user:m,text:t,parentId,createdAt:serverTimestamp()}); inp.value=''; document.getElementById('rb_'+parentId).style.display='none'; };
+window.toggleReply=(id)=>{ const b=document.getElementById('rb_'+id); b.style.display= b.style.display==='none'?'flex':'none'; };
 
 function render(){
-  const m=getMyName(); let filtered=allPosts;
-  if(currentTab==='friends'){ const myFriends=friends.filter(f=> (f.from===m||f.to===m)&&f.status==='accepted').map(f=> f.from===m? f.to: f.from); filtered=allPosts.filter(p=> myFriends.includes(p.name)||p.name===m); }
-  else if(currentTab==='following'){ const following=follows.filter(f=>f.follower===m).map(f=>f.following); filtered=allPosts.filter(p=> following.includes(p.name)); }
-  if(filtered.length===0){ feedDiv.innerHTML='No posts'; return; }
-  let html='';
-  filtered.forEach(p=>{
-    const likeCount=likes.filter(l=>l.postId===p.id).length; const iLiked=likes.some(l=>l.postId===p.id && l.user===m);
-    const postComments=comments.filter(c=>c.postId===p.id);
-    const topComments=postComments.filter(c=>!c.parentId);
-    let content=`<div>${p.text||''}</div>`;
-    if(p.fileUrl){ if(p.fileType&&p.fileType.startsWith('image/')) content+=`<br><img src="${p.fileUrl}" style="max-width:100%;border-radius:10px">`; else content+=`<br><a href="${p.fileUrl}" target="_blank" style="background:#eef;padding:6px 10px;border-radius:8px;text-decoration:none">📄 ${p.fileName}</a>`; }
-    if(p.reshareOf){ content=`<div>🔁 Reshared from <b>${p.reshareOf}</b></div><div class="reshared">${p.reshareText||''}${p.reshareFile? (p.reshareFileType&&p.reshareFileType.startsWith('image/')? `<br><img src="${p.reshareFile}" style="max-width:100%">`: `<br><a href="${p.reshareFile}" target="_blank">📄 ${p.reshareFileName}</a>`):''}</div>`; }
-    let commentsHtml=`<div class="commentBox">`;
-    topComments.forEach(c=>{
-      const replies=postComments.filter(r=>r.parentId===c.id);
-      commentsHtml+=`<div class="comment"><b>${c.user}</b>: ${c.text} <button class="smallBtn" onclick="toggleReplyBox('${c.id}')">Reply</button>
-        <div id="replyBox_${c.id}" class="commentInput" style="display:none"><input id="rInput_${c.id}" placeholder="Reply to ${c.user}..."><button onclick="addReply('${p.id}','${c.id}')">Send</button></div>`;
-      replies.forEach(rep=>{ commentsHtml+=`<div class="reply"><b>${rep.user}</b>: ${rep.text}</div>`; });
-      commentsHtml+=`</div>`;
+  const m=myName(); let list=allPosts;
+  if(tab==='friends'){ const mf=friends.filter(f=> (f.from===m||f.to===m)&&f.status==='accepted').map(f=> f.from===m? f.to: f.from); list=allPosts.filter(p=> mf.includes(p.name)||p.name===m); }
+  if(tab==='following'){ const fol=follows.filter(f=>f.follower===m).map(f=>f.following); list=allPosts.filter(p=> fol.includes(p.name)); }
+  if(list.length===0){ feed.innerHTML='<p style="text-align:center;color:gray">No posts yet, be first!</p>'; return; }
+  let h='';
+  list.forEach(p=>{
+    const lc=likes.filter(l=>l.postId===p.id).length; const il=likes.some(l=>l.postId===p.id&&l.user===m);
+    const pcs=comments.filter(c=>c.postId===p.id); const tops=pcs.filter(c=>!c.parentId);
+    let body=`<div style="margin:6px 0">${p.text||''}</div>`;
+    if(p.fileUrl){ body+= p.fileType&&p.fileType.startsWith('image/')? `<img src="${p.fileUrl}" style="width:100%;border-radius:12px;margin-top:6px">`: `<a href="${p.fileUrl}" target="_blank" style="display:inline-block;background:#eef6ff;padding:6px 10px;border-radius:8px;text-decoration:none">📄 ${p.fileName||'File'}</a>`; }
+    if(p.reshareOf){ body=`<div style="background:#f8fafc;border-left:3px solid #2c8ac0;padding:8px;border-radius:8px"><b>🔁 ${p.reshareOf}:</b><br>${p.reshareText||''}${p.reshareFile? `<br><a href="${p.reshareFile}" target="_blank">📎 ${p.reshareFileName||'File'}</a>`:''}</div>`; }
+    let comHtml=`<div class="commentWrap">`;
+    tops.forEach(c=>{
+      const reps=pcs.filter(r=>r.parentId===c.id);
+      comHtml+=`<div class="comment"><b>${c.user}</b> ${c.text} <span class="small" onclick="toggleReply('${c.id}')">Reply</span><div id="rb_${c.id}" class="flex" style="display:none"><input id="ri_${c.id}" placeholder="Reply..."><button class="small" onclick="reply('${p.id}','${c.id}')">Send</button></div>`;
+      reps.forEach(r=> comHtml+=`<div class="reply"><b>${r.user}</b> ${r.text}</div>`);
+      comHtml+=`</div>`;
     });
-    commentsHtml+=`<div class="commentInput"><input id="cInput_${p.id}" placeholder="Write a comment..."><button onclick="addComment('${p.id}')">Comment</button></div></div>`;
+    comHtml+=`<div class="flex"><input id="ci_${p.id}" placeholder="Add comment..."><button class="small" onclick="comment('${p.id}')">Send</button></div></div>`;
 
-    html+=`<div class="post"><b>${p.name}</b> ${p.name!==m? `<button class="smallBtn" onclick="addFriend('${p.name.replace(/'/g,"\\'")}')">+Friend</button><button class="smallBtn" onclick="toggleFollow('${p.name.replace(/'/g,"\\'")}')">Follow</button>`:''}
-    ${content}
-    <div class="actionBar"><button class="actionBtn ${iLiked?'liked':''}" onclick="toggleLike('${p.id}')">❤️ ${likeCount||''} Like</button><button class="actionBtn" onclick="reshare('${p.id}')">🔁 Reshare</button><span style="font-size:12px;color:gray">💬 ${topComments.length} Comments</span></div>
-    ${commentsHtml}
-    </div>`;
+    h+=`<div class="post"><div><span class="pfp">${p.name.charAt(0).toUpperCase()}</span><b>${p.name}</b>
+    ${p.name!==m? `<button class="small" onclick="addFriend('${p.name.replace(/'/g,"\\'")}')">+Friend</button><button class="small" onclick="follow('${p.name.replace(/'/g,"\\'")}')">Follow</button>`:''}
+    </div>${body}
+    <div class="btnRow"><button class="act ${il?'liked':''}" onclick="like('${p.id}')">❤️ ${lc||'Like'}</button><button class="act" onclick="reshare('${p.id}')">🔁 Reshare</button><span class="time">💬 ${tops.length}</span></div>
+    ${comHtml}</div>`;
   });
-  feedDiv.innerHTML=html;
+  feed.innerHTML=h;
 }
 </script></body></html>
