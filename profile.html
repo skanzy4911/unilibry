@@ -1,0 +1,113 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Profile - UNILIBRY</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:'Segoe UI',Arial;background:#f8f9fa}
+.header{background:linear-gradient(135deg,#0a3d62,#1e6f9f);color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.header a{color:#ffdd57;text-decoration:none;margin-left:10px;font-weight:bold}
+.cover{height:200px;background:linear-gradient(135deg,#667eea,#764ba2);position:relative}
+.avatarBox{position:absolute;bottom:-60px;left:20px;display:flex;align-items:end;gap:15px}
+.avatar{width:120px;height:120px;border-radius:50%;border:5px solid white;object-fit:cover;background:white}
+.editBtn{background:white;color:#0a3d62;border:none;padding:8px 15px;border-radius:20px;font-weight:bold;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.card{max-width:800px;margin:80px auto 20px;background:white;border-radius:20px;padding:20px;box-shadow:0 5px 20px rgba(0,0,0,.08)}
+input,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;margin:8px 0;font-size:14px}
+.saveBtn{background:linear-gradient(135deg,#0a3d62,#1e6f9f);color:white;width:100%;padding:14px;border-radius:25px;border:none;font-size:16px;font-weight:bold;cursor:pointer}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:15px}
+.gallery img{width:100%;height:120px;object-fit:cover;border-radius:12px}
+.stats{display:flex;gap:20px;margin:15px 0}
+.stat{text-align:center}.stat b{font-size:20px;color:#0a3d62;display:block}
+</style></head><body>
+<div class="header"><b>UNILIBRY</b><div><a href="index.html">📚 Library</a><a href="connect.html">💬 Connect</a></div></div>
+<div class="cover" id="coverDiv"><div class="avatarBox"><img id="avatarImg" class="avatar" src="https://via.placeholder.com/120?text=You"><button class="editBtn" onclick="document.getElementById('avatarFile').click()">📷 Change</button></div>
+<button class="editBtn" style="position:absolute;right:20px;bottom:15px" onclick="document.getElementById('coverFile').click()">Change Cover</button>
+</div>
+
+<div class="card">
+<h2 id="displayName">Your Name</h2>
+<p id="displaySchool" style="color:gray"></p>
+
+<div class="stats"><div class="stat"><b id="postCount">0</b>Posts</div><div class="stat"><b id="friendCount">0</b>Friends</div><div class="stat"><b id="likeCount">0</b>Likes</div></div>
+
+<h3>Edit Profile</h3>
+<input id="nameInput" placeholder="Full Name">
+<input id="schoolInput" placeholder="School e.g. UniJos - Computer Science 300L">
+<textarea id="bioInput" placeholder="Bio - Tell people about you... e.g. I love reading, I dey find reading partner"></textarea>
+<input type="file" id="avatarFile" accept="image/*" style="display:none">
+<input type="file" id="coverFile" accept="image/*" style="display:none">
+<input type="file" id="galleryFile" accept="image/*">
+<button class="saveBtn" onclick="saveProfile()" id="saveBtn">Save Profile ✨</button>
+
+<h3 style="margin-top:25px">📸 My Gallery - Add Pictures</h3>
+<div class="gallery" id="galleryDiv"></div>
+<p style="font-size:12px;color:gray">Select picture above to add to gallery</p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = { apiKey:"YOUR_API_KEY_HERE", authDomain:"unilibry.firebaseapp.com", projectId:"unilibry", storageBucket:"unilibry.appspot.com", messagingSenderId:"...", appId:"..." };
+const app=initializeApp(firebaseConfig); const db=getFirestore(app); const storage=getStorage(app);
+
+const nameInput=document.getElementById('nameInput'), schoolInput=document.getElementById('schoolInput'), bioInput=document.getElementById('bioInput');
+nameInput.value=localStorage.getItem('unilibry_name')||'';
+let currentUser=nameInput.value.trim();
+
+const avatarImg=document.getElementById('avatarImg'), coverDiv=document.getElementById('coverDiv');
+
+async function loadProfile(){
+  if(!currentUser) return;
+  const d=await getDoc(doc(db,'profiles',currentUser));
+  if(d.exists()){
+    const p=d.data();
+    document.getElementById('displayName').textContent=p.name||currentUser;
+    document.getElementById('displaySchool').textContent=p.school||'';
+    nameInput.value=p.name||''; schoolInput.value=p.school||''; bioInput.value=p.bio||'';
+    if(p.avatar) avatarImg.src=p.avatar;
+    if(p.cover) coverDiv.style.backgroundImage=`url(${p.cover})`; coverDiv.style.backgroundSize='cover';
+    renderGallery(p.gallery||[]);
+  }
+}
+loadProfile();
+
+document.getElementById('avatarFile').onchange=async(e)=>{
+  const file=e.target.files[0]; if(!file)return;
+  const r=ref(storage,'profiles/'+Date.now()+'_avatar_'+file.name); await uploadBytes(r,file); const url=await getDownloadURL(r); avatarImg.src=url; avatarImg.dataset.newUrl=url;
+};
+document.getElementById('coverFile').onchange=async(e)=>{
+  const file=e.target.files[0]; if(!file)return;
+  const r=ref(storage,'profiles/'+Date.now()+'_cover_'+file.name); await uploadBytes(r,file); const url=await getDownloadURL(r); coverDiv.style.backgroundImage=`url(${url})`; coverDiv.style.backgroundSize='cover'; coverDiv.dataset.newUrl=url;
+};
+document.getElementById('galleryFile').onchange=async(e)=>{
+  const file=e.target.files[0]; if(!file)return;
+  document.getElementById('saveBtn').textContent='Uploading...';
+  const r=ref(storage,'profiles/'+Date.now()+'_gallery_'+file.name); await uploadBytes(r,file); const url=await getDownloadURL(r);
+  // save to profile
+  const m=nameInput.value.trim()||currentUser;
+  const d=await getDoc(doc(db,'profiles',m));
+  let gallery=[]; if(d.exists()) gallery=d.data().gallery||[]; gallery.unshift(url);
+  await setDoc(doc(db,'profiles',m),{gallery}, {merge:true}); renderGallery(gallery);
+  document.getElementById('saveBtn').textContent='Save Profile ✨';
+};
+
+function renderGallery(arr){ document.getElementById('galleryDiv').innerHTML=arr.map(u=>`<img src="${u}">`).join(''); }
+
+window.saveProfile=async()=>{
+  const name=nameInput.value.trim(); if(!name){alert('Put name');return;}
+  localStorage.setItem('unilibry_name',name); currentUser=name;
+  const data={ name, school:schoolInput.value.trim(), bio:bioInput.value.trim(), updatedAt:serverTimestamp() };
+  if(avatarImg.dataset.newUrl) data.avatar=avatarImg.dataset.newUrl;
+  if(coverDiv.dataset.newUrl) data.cover=coverDiv.dataset.newUrl;
+  await setDoc(doc(db,'profiles',name), data, {merge:true});
+  document.getElementById('displayName').textContent=name; alert('Profile saved! ✨'); loadProfile();
+};
+
+// counts
+onSnapshot(collection(db,'connect_posts'), s=>{
+  const m=localStorage.getItem('unilibry_name'); if(!m)return; let c=0; s.forEach(d=>{ if(d.data().name===m) c++; }); document.getElementById('postCount').textContent=c;
+});
+onSnapshot(collection(db,'friends'), s=>{
+  const m=localStorage.getItem('unilibry_name'); let c=0; s.forEach(d=>{ const f=d.data(); if((f.from===m||f.to===m)&&f.status==='accepted') c++; }); document.getElementById('friendCount').textContent=c;
+});
+onSnapshot(collection(db,'likes'), s=>{ document.getElementById('likeCount').textContent=s.size; });
+</script></body></html>
