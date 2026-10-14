@@ -1,0 +1,153 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UNILIBRY Market 2.0</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial;background:#f2f4f7}
+.top{background:linear-gradient(135deg,#0a3d62,#27ae60);color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.top a{color:#ffe082;text-decoration:none;margin-left:8px;font-weight:bold;font-size:13px}
+.wrap{max-width:1100px;margin:0 auto;padding:10px}
+.card{background:white;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1.5px solid #ddd;margin:5px 0;background:#f8fafc}
+.btnMain{background:linear-gradient(135deg,#27ae60,#0a3d62);color:white;border:none;padding:11px 18px;border-radius:25px;font-weight:bold;cursor:pointer}
+.btnSmall{padding:6px 10px;border-radius:20px;border:1px solid #ddd;background:white;font-size:11px;cursor:pointer;margin:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px}
+.prod{background:white;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.05);position:relative}
+.prod img{width:100%;height:140px;object-fit:cover}
+.prod.info{padding:8px}
+.price{color:#27ae60;font-weight:bold}
+.soldTag{position:absolute;top:6px;left:6px;background:red;color:white;font-size:10px;padding:3px 6px;border-radius:8px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.chip{white-space:nowrap;padding:6px 12px;border-radius:20px;border:1px solid #ddd;background:white;cursor:pointer;font-size:11px}
+.chip.active{background:#0a3d62;color:white}
+.cartBar{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#0a3d62;color:white;padding:10px 18px;border-radius:30px;box-shadow:0 6px 20px rgba(0,0,0,.3);display:none;z-index:15;align-items:center;gap:10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:none;align-items:center;justify-content:center;padding:12px}
+.modalInner{background:white;border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow:auto;padding:14px}
+.stars{color:gold}
+</style></head><body>
+<div class="top"><div><b>🛒 UNILIBRY Market 2.0</b></div><div><a href="dashboard.html">Library</a><a href="connect.html">Connect</a><a href="#" onclick="openCart()">🛒<span id="cartCount"></span></a><a href="#" onclick="openMyShop()">My Shop</a></div></div>
+
+<div class="wrap">
+<div class="card">
+<h3 style="margin:0 0 6px">Sell Product</h3>
+<div style="display:flex;gap:6px"><input id="sName" placeholder="Your Name"><input id="sWhatsapp" placeholder="WhatsApp e.g 080..."></div>
+<input id="pTitle" placeholder="Title e.g Fairly Used HP Laptop">
+<textarea id="pDesc" placeholder="Description, defects, reason..."></textarea>
+<div style="display:flex;gap:6px"><input id="pPrice" type="number" placeholder="Price ₦"><select id="pCond"><option>New</option><option>Fairly Used</option><option>Used</option></select><select id="pCat"><option>Textbooks</option><option>Electronics</option><option>Hostel Items</option><option>Clothes</option><option>Food</option><option>Others</option></select></div>
+<div style="display:flex;gap:6px"><input id="pLoc" placeholder="Location e.g UniJos, Village hostel"><label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="pNeg" style="width:auto"> Negotiable</label></div>
+<input type="file" id="pFile" accept="image/*">
+<button class="btnMain" style="width:100%;margin-top:6px" onclick="sell()" id="sellBtn">Post Product 🚀</button>
+<p id="msg" style="font-size:12px;color:green"></p>
+</div>
+
+<div class="card">
+<div style="display:flex;gap:6px"><input id="search" placeholder="Search laptop, textbook..." oninput="draw()"><select id="sort" onchange="draw()"><option value="new">Newest</option><option value="low">Low Price</option><option value="high">High Price</option></select></div>
+<div class="chips" style="margin-top:8px"><div class="chip active" onclick="setCat('All')">All</div><div class="chip" onclick="setCat('Textbooks')">Textbooks</div><div class="chip" onclick="setCat('Electronics')">Electronics</div><div class="chip" onclick="setCat('Hostel Items')">Hostel</div><div class="chip" onclick="setCat('Clothes')">Clothes</div><div class="chip" onclick="setCat('Food')">Food</div></div>
+<div class="grid" id="grid" style="margin-top:10px">Loading...</div>
+</div>
+</div>
+
+<div class="cartBar" id="cartBar"><span id="cartInfo"></span><button class="btnMain" style="padding:6px 12px;background:#27ae60" onclick="openCart()">View Cart</button></div>
+
+<div class="modal" id="prodModal"><div class="modalInner" id="modalContent"></div></div>
+<div class="modal" id="cartModal"><div class="modalInner"><h3>🛒 Your Cart</h3><div id="cartList"></div><textarea id="deliveryNote" placeholder="Delivery info - Hostel name, room number, call time..."></textarea><button class="btnMain" style="width:100%;margin-top:8px" onclick="checkout()">Checkout via WhatsApp</button><button class="btnSmall" style="width:100%;margin-top:6px" onclick="closeModals()">Close</button></div></div>
+<div class="modal" id="shopModal"><div class="modalInner"><h3>🏪 My Shop - My Products</h3><div id="myShopList"></div><button class="btnSmall" style="width:100%;margin-top:6px" onclick="closeModals()">Close</button></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = { apiKey:"YOUR_API_KEY", authDomain:"unilibry.firebaseapp.com", projectId:"unilibry", storageBucket:"unilibry.appspot.com", messagingSenderId:"...", appId:"..." };
+const app=initializeApp(firebaseConfig); const db=getFirestore(app); const storage=getStorage(app);
+
+const sName=document.getElementById('sName'), pTitle=document.getElementById('pTitle'), pDesc=document.getElementById('pDesc'), pPrice=document.getElementById('pPrice'), pCat=document.getElementById('pCat'), pCond=document.getElementById('pCond'), pLoc=document.getElementById('pLoc'), pNeg=document.getElementById('pNeg'), pWhatsapp=document.getElementById('sWhatsapp'), pFile=document.getElementById('pFile');
+sName.value=localStorage.getItem('unilibry_name')||''; sName.oninput=()=>localStorage.setItem('unilibry_name',sName.value);
+
+let products=[], reviews=[], cart=JSON.parse(localStorage.getItem('market_cart')||'[]'), wishlist=JSON.parse(localStorage.getItem('market_wish')||'[]'), curCat='All';
+const myName=()=>sName.value.trim();
+
+onSnapshot(query(collection(db,'market_products'), orderBy('createdAt','desc')), s=>{ products=[]; s.forEach(d=>products.push({id:d.id,...d.data()})); draw(); drawMyShop(); });
+onSnapshot(collection(db,'market_reviews'), s=>{ reviews=[]; s.forEach(d=>reviews.push(d.data())); });
+
+window.setCat=(c)=>{ curCat=c; document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active', x.textContent===c || (c==='All'&&x.textContent==='All'))); draw(); };
+
+window.sell=async()=>{
+  const name=myName(); if(!name||!pTitle.value.trim()||!pPrice.value){alert('Name, Title, Price needed');return;} if(!pFile.files[0]){alert('Add picture');return;}
+  document.getElementById('sellBtn').disabled=true; document.getElementById('msg').innerText='Uploading...';
+  try{
+    const f=pFile.files[0]; const r=ref(storage,'market2/'+Date.now()+'_'+f.name); await uploadBytes(r,f); const url=await getDownloadURL(r);
+    await addDoc(collection(db,'market_products'),{seller:name,title:pTitle.value.trim(),desc:pDesc.value,price:Number(pPrice.value),category:pCat.value,condition:pCond.value,location:pLoc.value,negotiable:pNeg.checked,whatsapp:pWhatsapp.value,img:url,sold:false,views:0,createdAt:serverTimestamp()});
+    pTitle.value=''; pDesc.value=''; pPrice.value=''; pFile.value=''; document.getElementById('msg').innerText='Posted ✅';
+  }catch(e){alert(e.message);} document.getElementById('sellBtn').disabled=false;
+};
+
+function avgRating(pid){ const rs=reviews.filter(r=>r.productId===pid); if(!rs.length) return {avg:0,count:0}; const avg=rs.reduce((a,b)=>a+b.stars,0)/rs.length; return {avg:avg.toFixed(1),count:rs.length}; }
+
+window.draw=()=>{
+  const q=document.getElementById('search').value.toLowerCase(); const sort=document.getElementById('sort').value;
+  let list=products.filter(p=> (curCat==='All'||p.category===curCat) && (p.title.toLowerCase().includes(q)||p.desc?.toLowerCase().includes(q)) );
+  if(sort==='low') list.sort((a,b)=>a.price-b.price); if(sort==='high') list.sort((a,b)=>b.price-a.price);
+  document.getElementById('grid').innerHTML=list.map(p=>{
+    const r=avgRating(p.id);
+    return `<div class="prod"><div style="position:relative"><img src="${p.img}" onclick="openProd('${p.id}')">${p.sold?`<span class="soldTag">SOLD</span>`:''}<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:white;font-size:10px;padding:3px 6px;border-radius:8px">${p.condition||''}</span></div>
+    <div class="info"><b style="font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.title}</b><span class="price">₦${Number(p.price).toLocaleString()}</span> ${p.negotiable?'<span style="font-size:10px;color:gray">(Negotiable)</span>':''}<br><span style="font-size:11px;color:gray">${p.location||''} • ${p.seller}</span><br><span style="font-size:11px">⭐ ${r.avg||'0'} (${r.count}) • 👀 ${p.views||0}</span><div style="margin-top:4px"><button class="btnSmall" onclick="addToCart('${p.id}')" ${p.sold?'disabled':''}>Add Cart</button><button class="btnSmall" onclick="toggleWish('${p.id}')">${wishlist.includes(p.id)?'❤️':'🤍'}</button></div></div></div>`;
+  }).join('')||'<p>No products</p>';
+};
+
+window.openProd=async(id)=>{
+  const p=products.find(x=>x.id===id); if(!p)return;
+  // increase view
+  try{ await updateDoc(doc(db,'market_products',id),{views:(p.views||0)+1}); }catch(e){}
+  const r=avgRating(id); const revs=reviews.filter(x=>x.productId===id);
+  const waLink=p.whatsapp? `https://wa.me/234${p.whatsapp.replace(/^0/,'')}?text=${encodeURIComponent('Hello '+p.seller+', I want '+p.title+' for ₦'+p.price+' on UNILIBRY Market')}`:'#';
+  document.getElementById('modalContent').innerHTML=`
+    <img src="${p.img}" style="width:100%;border-radius:12px">
+    <h3 style="margin:8px 0">${p.title} ${p.sold?'<span style="color:red;font-size:12px">[SOLD]</span>':''}</h3>
+    <span class="price">₦${Number(p.price).toLocaleString()}</span> • ${p.category} • ${p.condition}<br><span style="font-size:12px;color:gray">${p.location} • Seller: ${p.seller}</span>
+    <p style="font-size:13px">${p.desc||''}</p>
+    <p style="font-size:12px">⭐ ${r.avg} (${r.count} reviews) • 👀 ${p.views||0} views ${p.negotiable?'• Negotiable':''}</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btnMain" onclick="addToCart('${p.id}')">Add to Cart</button><button class="btnSmall" onclick="toggleWish('${p.id}')">Wishlist</button><button class="btnSmall" onclick="shareProd('${p.id}')">Share</button></div>
+    ${p.whatsapp? `<a href="${waLink}" target="_blank" style="display:block;background:#25D366;color:white;text-align:center;padding:11px;border-radius:25px;text-decoration:none;font-weight:bold;margin-top:8px">💬 Chat Seller</a>`:''}
+    <div style="margin-top:10px"><b>Reviews</b><div id="revList">${revs.map(x=>`<div style="font-size:12px;border-bottom:1px solid #eee;padding:4px 0"><b>${x.user}</b> ⭐${x.stars} - ${x.text}</div>`).join('')||'No reviews yet'}</div>
+    <div style="display:flex;gap:4px;margin-top:6px"><select id="starSel"><option value="5">5 ⭐</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select><input id="revText" placeholder="Write review..."><button class="btnSmall" onclick="addReview('${p.id}')">Post</button></div></div>
+    <button class="btnSmall" style="width:100%;margin-top:10px" onclick="closeModals()">Close</button>`;
+  document.getElementById('prodModal').style.display='flex';
+};
+
+window.addReview=async(pid)=>{ const m=myName(); if(!m){alert('Put name for top');return;} const text=document.getElementById('revText').value.trim(); const stars=Number(document.getElementById('starSel').value); if(!text)return; await addDoc(collection(db,'market_reviews'),{productId:pid,user:m,text,stars,createdAt:serverTimestamp()}); document.getElementById('revText').value=''; };
+
+window.addToCart=(id)=>{ if(cart.find(c=>c===id)){alert('Already in cart');return;} cart.push(id); localStorage.setItem('market_cart',JSON.stringify(cart)); updateCartBar(); alert('Added to cart 🛒'); };
+window.toggleWish=(id)=>{ if(wishlist.includes(id)) wishlist=wishlist.filter(x=>x!==id); else wishlist.push(id); localStorage.setItem('market_wish',JSON.stringify(wishlist)); draw(); };
+window.shareProd=(id)=>{ const url=location.href; navigator.clipboard?.writeText(url); alert('Link copied! Share am'); };
+
+function updateCartBar(){ document.getElementById('cartCount').innerText=cart.length? `(${cart.length})`:''; const bar=document.getElementById('cartBar'); if(cart.length){ bar.style.display='flex'; document.getElementById('cartInfo').innerText=cart.length+' items in cart'; } else bar.style.display='none'; }
+updateCartBar();
+
+window.openCart=()=>{
+  const items=cart.map(id=>products.find(p=>p.id===id)).filter(Boolean);
+  let total=0; items.forEach(p=>total+=Number(p.price||0));
+  document.getElementById('cartList').innerHTML= items.map(p=>`<div style="display:flex;gap:8px;align-items:center;border-bottom:1px solid #eee;padding:6px 0"><img src="${p.img}" style="width:50px;height:50px;object-fit:cover;border-radius:8px"><div style="flex:1"><b style="font-size:13px">${p.title}</b><br><span class="price">₦${p.price}</span></div><button class="btnSmall" onclick="removeCart('${p.id}')">Remove</button></div>`).join('') + `<p><b>Total: ₦${total.toLocaleString()}</b></p>` || 'Cart empty';
+  document.getElementById('cartModal').style.display='flex';
+};
+window.removeCart=(id)=>{ cart=cart.filter(x=>x!==id); localStorage.setItem('market_cart',JSON.stringify(cart)); updateCartBar(); openCart(); };
+window.checkout=()=>{
+  const items=cart.map(id=>products.find(p=>p.id===id)).filter(Boolean);
+  if(!items.length){alert('Cart empty');return;}
+  let text=`Hello! I want to buy from UNILIBRY Market:%0A`; items.forEach(p=>{ text+=`- ${p.title} ₦${p.price} (Seller: ${p.seller})%0A`; });
+  text+=`%0ADelivery: ${document.getElementById('deliveryNote').value}%0AName: ${myName()}`;
+  const firstSeller=items[0].whatsapp? `234${items[0].whatsapp.replace(/^0/,'')}`:'';
+  if(firstSeller) window.open(`https://wa.me/${firstSeller}?text=${text}`,'_blank');
+  else alert('No WhatsApp for seller, copy list: '+text);
+};
+
+window.openMyShop=()=>{
+  drawMyShop(); document.getElementById('shopModal').style.display='flex';
+};
+function drawMyShop(){
+  const m=myName(); const mine=products.filter(p=>p.seller===m);
+  document.getElementById('myShopList').innerHTML= mine.map(p=>`<div style="display:flex;gap:8px;align-items:center;border-bottom:1px solid #eee;padding:6px 0"><img src="${p.img}" style="width:50px;height:50px;object-fit:cover;border-radius:8px"><div style="flex:1"><b style="font-size:12px">${p.title}</b><br><span class="price">₦${p.price}</span> ${p.sold?'<span style="color:red;font-size:10px">SOLD</span>':''}</div><div><button class="btnSmall" onclick="markSold('${p.id}',${!p.sold})">${p.sold?'Unsell':'Sold'}</button><button class="btnSmall" onclick="delProd('${p.id}')">Delete</button></div></div>`).join('')||'You never post product yet';
+}
+window.markSold=async(id,sold)=>{ await updateDoc(doc(db,'market_products',id),{sold}); };
+window.delProd=async(id)=>{ if(confirm('Delete?')) await deleteDoc(doc(db,'market_products',id)); };
+
+window.closeModals=()=>{ document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); };
+</script></body></html>
