@@ -1,87 +1,119 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>UNILIBRY Connect - All Schools Live</title>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UNILIBRY Connect - Follow</title>
 <style>
 body{margin:0;font-family:Arial;background:#f0f2f5}
-.header{background:#0a3d62;color:white;padding:15px;text-align:center;position:sticky;top:0;z-index:10}
-.header a{color:#ffdd57;text-decoration:none;margin:0 10px}
-.box{max-width:700px;margin:20px auto;background:white;padding:20px;border-radius:15px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
-textarea{width:100%;height:80px;border-radius:10px;padding:12px;border:1px solid #ccc;resize:none;font-size:16px}
-input{width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin:10px 0;font-size:16px;box-sizing:border-box}
-button{background:#0a3d62;color:white;border:none;padding:12px 25px;border-radius:25px;font-weight:bold;cursor:pointer;width:100%;font-size:16px}
-.post{border-bottom:1px solid #eee;padding:15px 0}
-.post b{color:#0a3d62}
-.time{font-size:12px;color:gray}
-</style>
-</head>
-<body>
-<div class="header">
-  <b>UNILIBRY Connect 🌍</b> | 
-  <a href="index.html">📚 Library</a>
-  <a href="connect.html">💬 Live Feed</a>
+.header{background:#0a3d62;color:white;padding:12px;text-align:center;position:sticky;top:0;z-index:10}
+.header a{color:#ffdd57;text-decoration:none;margin:0 8px;font-size:14px}
+.box{max-width:700px;margin:12px auto;background:white;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+input,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;box-sizing:border-box;margin:6px 0}
+button{background:#0a3d62;color:white;border:none;padding:10px 18px;border-radius:20px;font-weight:bold;cursor:pointer}
+.post{border-bottom:1px solid #eee;padding:12px 0}
+.followBtn{background:#fff;color:#0a3d62;border:1px solid #0a3d62;padding:4px 12px;border-radius:15px;font-size:12px;margin-left:8px}
+.followBtn.following{background:#0a3d62;color:white}
+.tabs{display:flex;gap:10px;margin-bottom:10px}
+.tab{flex:1;padding:10px;text-align:center;border-radius:20px;cursor:pointer;border:1px solid #0a3d62}
+.tab.active{background:#0a3d62;color:white}
+.time{font-size:11px;color:gray}
+.fileLink{background:#eef;padding:6px 10px;border-radius:8px;text-decoration:none;color:#0a3d62;display:inline-block;margin-top:6px}
+</style></head><body>
+<div class="header"><b>UNILIBRY Connect 🌍</b> | <a href="index.html">Library</a> <span id="meInfo" style="font-size:12px"></span></div>
+
+<div class="box">
+<input id="nameInput" placeholder="Your Name & School e.g. Musa - UniJos">
+<textarea id="textInput" placeholder="Share something..."></textarea>
+<input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx">
+<button onclick="makePost()" id="postBtn" style="width:100%">Post 🚀</button>
+<p id="status"></p>
 </div>
 
 <div class="box">
-  <h3>Share to All Universities 🎓</h3>
-  <input id="nameInput" placeholder="Your name & school e.g. David - UniJos">
-  <textarea id="postInput" placeholder="Wetin you wan share? Question, note, gist..."></textarea>
-  <button onclick="makePost()">Post to All Schools 🚀</button>
+<div class="tabs">
+<div class="tab active" id="tabAll" onclick="switchTab('all')">All Schools</div>
+<div class="tab" id="tabFollowing" onclick="switchTab('following')">My Following (<span id="followingCount">0</span>)</div>
 </div>
-
-<div class="box" id="feedBox">
-  <h3>🔴 Live Feed - All Schools</h3>
-  <div id="feed">Loading posts...</div>
+<div id="feed">Loading...</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyB9H0...PUT_YOUR_FULL_KEY_HERE",
-  authDomain: "unilibry.firebaseapp.com",
-  projectId: "unilibry",
-  storageBucket: "unilibry.appspot.com",
-  messagingSenderId: "...",
-  appId: "..."
+const firebaseConfig = { apiKey:"YOUR_API_KEY", authDomain:"unilibry.firebaseapp.com", projectId:"unilibry", storageBucket:"unilibry.appspot.com", messagingSenderId:"...", appId:"..." };
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const storage=getStorage(app);
+
+const nameInput=document.getElementById('nameInput'), textInput=document.getElementById('textInput'), fileInput=document.getElementById('fileInput'), feedDiv=document.getElementById('feed'), meInfo=document.getElementById('meInfo'), followingCountSpan=document.getElementById('followingCount');
+
+let allPosts=[], followingList=[], currentTab='all';
+nameInput.value=localStorage.getItem('unilibry_name')||'';
+function updateMe(){ const n=nameInput.value.trim()||'Guest'; meInfo.textContent=' | You: '+n; }
+nameInput.oninput=()=>{ localStorage.setItem('unilibry_name',nameInput.value); updateMe(); loadFollowing(); };
+updateMe();
+
+window.switchTab=(t)=>{ currentTab=t; document.getElementById('tabAll').classList.toggle('active',t==='all'); document.getElementById('tabFollowing').classList.toggle('active',t==='following'); renderFeed(); };
+
+async function loadFollowing(){
+  const me=nameInput.value.trim();
+  if(!me){ followingList=[]; followingCountSpan.textContent='0'; renderFeed(); return; }
+  const q=query(collection(db,'follows'), where('follower','==',me));
+  const snap=await getDocs(q);
+  followingList=[]; snap.forEach(d=>followingList.push(d.data().following));
+  followingCountSpan.textContent=followingList.length; renderFeed();
+}
+loadFollowing();
+
+window.toggleFollow=async(targetName)=>{
+  const me=nameInput.value.trim();
+  if(!me){alert('Put your name for top first');return;}
+  if(me===targetName){alert('You no fit follow yourself');return;}
+  const q=query(collection(db,'follows'), where('follower','==',me), where('following','==',targetName));
+  const snap=await getDocs(q);
+  if(!snap.empty){ // unfollow
+    for(const d of snap.docs){ await deleteDoc(doc(db,'follows',d.id)); }
+  }else{ // follow
+    await addDoc(collection(db,'follows'),{follower:me, following:targetName, createdAt:serverTimestamp()});
+  }
+  loadFollowing();
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const nameInput = document.getElementById('nameInput');
-const postInput = document.getElementById('postInput');
-const feedDiv = document.getElementById('feed');
-
-// remember name
-nameInput.value = localStorage.getItem('unilibry_name') || '';
-
-window.makePost = async () => {
-  const name = nameInput.value.trim();
-  const text = postInput.value.trim();
-  if(!name){ alert('Put your name & school first'); return; }
-  if(!text){ alert('Write something to post'); return; }
-  localStorage.setItem('unilibry_name', name);
+window.makePost=async()=>{
+  const name=nameInput.value.trim(); const text=textInput.value.trim(); const file=fileInput.files[0];
+  if(!name){alert('Put name');return;} if(!text&&!file){alert('Write or select file');return;}
+  localStorage.setItem('unilibry_name',name);
+  document.getElementById('postBtn').disabled=true;
+  let fileUrl='', fileType='', fileName='';
   try{
-    await addDoc(collection(db, "connect_posts"), { name, text, createdAt: serverTimestamp() });
-    postInput.value = '';
-  }catch(e){ alert('Error: '+e.message); }
+    if(file){ fileName=file.name; fileType=file.type; const r=ref(storage,'connect_files/'+Date.now()+'_'+fileName); await uploadBytes(r,file); fileUrl=await getDownloadURL(r); }
+    await addDoc(collection(db,'connect_posts'),{name,text,fileUrl,fileType,fileName,createdAt:serverTimestamp()});
+    textInput.value=''; fileInput.value=''; document.getElementById('status').innerText='Posted ✅';
+  }catch(e){alert(e.message);}
+  document.getElementById('postBtn').disabled=false;
 };
 
-// live feed
-const q = query(collection(db, "connect_posts"), orderBy("createdAt", "desc"));
-onSnapshot(q, (snap)=>{
-  if(snap.empty){ feedDiv.innerHTML = '<p>No posts yet. Be first!</p>'; return; }
+const qPosts=query(collection(db,'connect_posts'), orderBy('createdAt','desc'));
+onSnapshot(qPosts,(snap)=>{
+  allPosts=[]; snap.forEach(d=>{ allPosts.push({id:d.id,...d.data()}); }); renderFeed();
+});
+
+function renderFeed(){
+  let postsToShow = currentTab==='all'? allPosts : allPosts.filter(p=>followingList.includes(p.name));
+  if(postsToShow.length===0){ feedDiv.innerHTML= currentTab==='following'? 'You never follow anybody yet. Go All Schools tab and follow people!' : 'No posts yet'; return; }
+  const me=nameInput.value.trim();
   let html='';
-  snap.forEach(doc=>{
-    const d=doc.data();
-    const time = d.createdAt ? d.createdAt.toDate().toLocaleString() : 'now';
-    html+=`<div class="post"><b>${d.name}</b><br>${d.text}<br><span class="time">${time}</span></div>`;
+  postsToShow.forEach(p=>{
+    const time=p.createdAt? p.createdAt.toDate().toLocaleString(): 'now';
+    const isFollowing=followingList.includes(p.name);
+    const followBtn = p.name!==me? `<button class="followBtn ${isFollowing?'following':''}" onclick="toggleFollow('${p.name.replace(/'/g,"\\'")}')">${isFollowing?'✓ Following':'Follow'}</button>` : '';
+    let fileHtml='';
+    if(p.fileUrl){
+      if(p.fileType&&p.fileType.startsWith('image/')) fileHtml=`<br><a href="${p.fileUrl}" target="_blank"><img src="${p.fileUrl}" style="max-width:100%;border-radius:10px;margin-top:6px"></a>`;
+      else fileHtml=`<br><a class="fileLink" href="${p.fileUrl}" target="_blank">📄 ${p.fileName||'File'}</a>`;
+    }
+    html+=`<div class="post"><b>${p.name}</b>${followBtn}<div>${p.text||''}</div>${fileHtml}<br><span class="time">${time}</span></div>`;
   });
   feedDiv.innerHTML=html;
-});
-</script>
-</body>
-</html>
+}
+</script></body></html>
