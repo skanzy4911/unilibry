@@ -1,118 +1,127 @@
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>UNILIBRY Connect - Follow</title>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UNILIBRY Connect - Complete</title>
 <style>
 body{margin:0;font-family:Arial;background:#f0f2f5}
-.header{background:#0a3d62;color:white;padding:12px;text-align:center;position:sticky;top:0;z-index:10}
-.header a{color:#ffdd57;text-decoration:none;margin:0 8px;font-size:14px}
-.box{max-width:700px;margin:12px auto;background:white;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-input,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;box-sizing:border-box;margin:6px 0}
-button{background:#0a3d62;color:white;border:none;padding:10px 18px;border-radius:20px;font-weight:bold;cursor:pointer}
+.header{background:#0a3d62;color:white;padding:10px 15px;position:sticky;top:0;z-index:20;display:flex;justify-content:space-between}
+.header a{color:#ffdd57;text-decoration:none;margin-left:8px}
+.box{max-width:700px;margin:10px auto;background:white;padding:14px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+input,textarea{width:100%;padding:9px;border-radius:10px;border:1px solid #ccc;box-sizing:border-box;margin:5px 0}
+button{cursor:pointer;border:none;border-radius:20px;padding:6px 12px;font-weight:bold}
+.mainBtn{background:#0a3d62;color:white;width:100%;padding:12px}
 .post{border-bottom:1px solid #eee;padding:12px 0}
-.followBtn{background:#fff;color:#0a3d62;border:1px solid #0a3d62;padding:4px 12px;border-radius:15px;font-size:12px;margin-left:8px}
-.followBtn.following{background:#0a3d62;color:white}
-.tabs{display:flex;gap:10px;margin-bottom:10px}
-.tab{flex:1;padding:10px;text-align:center;border-radius:20px;cursor:pointer;border:1px solid #0a3d62}
+.actionBar{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
+.actionBtn{background:#f0f2f5;color:#333;padding:5px 10px;font-size:12px}
+.actionBtn.liked{background:#ff4757;color:white}
+.smallBtn{font-size:10px;padding:3px 8px;margin-left:4px}
+.tabBar{display:flex;gap:6px;margin-bottom:8px}
+.tab{flex:1;padding:7px;text-align:center;border-radius:20px;border:1px solid #0a3d62;cursor:pointer;font-size:13px}
 .tab.active{background:#0a3d62;color:white}
-.time{font-size:11px;color:gray}
-.fileLink{background:#eef;padding:6px 10px;border-radius:8px;text-decoration:none;color:#0a3d62;display:inline-block;margin-top:6px}
+.time{font-size:10px;color:gray}
+.commentBox{margin-top:8px;background:#f8f9fa;padding:8px;border-radius:10px}
+.comment{padding:6px 0;border-bottom:1px solid #e9e9e9;font-size:13px}
+.reply{margin-left:20px;border-left:2px solid #0a3d62;padding-left:8px;margin-top:4px}
+.commentInput{display:flex;gap:5px;margin-top:6px}
+.commentInput input{flex:1}
+.badge{background:red;color:white;border-radius:50%;padding:2px 6px;font-size:11px}
+.reshared{border-left:3px solid #0a3d62;padding-left:8px;background:#f9f9f9;margin-top:5px;border-radius:6px}
 </style></head><body>
-<div class="header"><b>UNILIBRY Connect 🌍</b> | <a href="dashboard.html">Library</a> <span id="meInfo" style="font-size:12px"></span></div>
+<div class="header"><div><b>UNILIBRY 2.0</b></div><div><a href="index.html">Library</a> <a href="#" onclick="showFriends()">👥<span id="reqBadge"></span></a></div></div>
 
 <div class="box">
-<input id="nameInput" placeholder="Your Name & School e.g. Musa - UniJos">
-<textarea id="textInput" placeholder="Share something..."></textarea>
-<input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx">
-<button onclick="makePost()" id="postBtn" style="width:100%">Post 🚀</button>
-<p id="status"></p>
+<input id="nameInput" placeholder="Name - School e.g. Musa - UniJos">
+<textarea id="textInput" placeholder="What's happening?"></textarea>
+<input type="file" id="fileInput" accept="image/*,.pdf,.doc">
+<button class="mainBtn" onclick="makePost()" id="postBtn">Post 🚀</button>
 </div>
 
+<div class="box" id="friendBox" style="display:none"><h3>Friend Requests</h3><div id="friendReqs"></div><h3>My Friends</h3><div id="friendList"></div><button onclick="hideFriends()">Close</button></div>
+
 <div class="box">
-<div class="tabs">
-<div class="tab active" id="tabAll" onclick="switchTab('all')">All Schools</div>
-<div class="tab" id="tabFollowing" onclick="switchTab('following')">My Following (<span id="followingCount">0</span>)</div>
-</div>
+<div class="tabBar"><div class="tab active" id="tAll" onclick="setTab('all')">All</div><div class="tab" id="tFriend" onclick="setTab('friends')">Friends</div><div class="tab" id="tFollowing" onclick="setTab('following')">Following</div></div>
 <div id="feed">Loading...</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, where, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-const firebaseConfig = { apiKey:"YOUR_API_KEY", authDomain:"unilibry.firebaseapp.com", projectId:"unilibry", storageBucket:"unilibry.appspot.com", messagingSenderId:"...", appId:"..." };
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-const storage=getStorage(app);
+const firebaseConfig = { apiKey:"YOUR_API_KEY_HERE", authDomain:"unilibry.firebaseapp.com", projectId:"unilibry", storageBucket:"unilibry.appspot.com", messagingSenderId:"...", appId:"..." };
+const app=initializeApp(firebaseConfig); const db=getFirestore(app); const storage=getStorage(app);
 
-const nameInput=document.getElementById('nameInput'), textInput=document.getElementById('textInput'), fileInput=document.getElementById('fileInput'), feedDiv=document.getElementById('feed'), meInfo=document.getElementById('meInfo'), followingCountSpan=document.getElementById('followingCount');
+const nameInput=document.getElementById('nameInput'), textInput=document.getElementById('textInput'), fileInput=document.getElementById('fileInput'), feedDiv=document.getElementById('feed');
+nameInput.value=localStorage.getItem('unilibry_name')||''; nameInput.oninput=()=>localStorage.setItem('unilibry_name',nameInput.value);
 
-let allPosts=[], followingList=[], currentTab='all';
-nameInput.value=localStorage.getItem('unilibry_name')||'';
-function updateMe(){ const n=nameInput.value.trim()||'Guest'; meInfo.textContent=' | You: '+n; }
-nameInput.oninput=()=>{ localStorage.setItem('unilibry_name',nameInput.value); updateMe(); loadFollowing(); };
-updateMe();
+let allPosts=[], likes=[], follows=[], friends=[], comments=[], currentTab='all';
 
-window.switchTab=(t)=>{ currentTab=t; document.getElementById('tabAll').classList.toggle('active',t==='all'); document.getElementById('tabFollowing').classList.toggle('active',t==='following'); renderFeed(); };
+function getMyName(){ return nameInput.value.trim(); }
+window.setTab=(t)=>{ currentTab=t; document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active')); document.getElementById(t==='all'?'tAll':t==='friends'?'tFriend':'tFollowing').classList.add('active'); render(); };
+window.showFriends=()=>document.getElementById('friendBox').style.display='block';
+window.hideFriends=()=>document.getElementById('friendBox').style.display='none';
 
-async function loadFollowing(){
-  const me=nameInput.value.trim();
-  if(!me){ followingList=[]; followingCountSpan.textContent='0'; renderFeed(); return; }
-  const q=query(collection(db,'follows'), where('follower','==',me));
-  const snap=await getDocs(q);
-  followingList=[]; snap.forEach(d=>followingList.push(d.data().following));
-  followingCountSpan.textContent=followingList.length; renderFeed();
+onSnapshot(query(collection(db,'connect_posts'), orderBy('createdAt','desc')), s=>{ allPosts=[]; s.forEach(d=>allPosts.push({id:d.id,...d.data()})); render(); });
+onSnapshot(collection(db,'likes'), s=>{ likes=[]; s.forEach(d=>likes.push({...d.data(), id:d.id})); render(); });
+onSnapshot(collection(db,'follows'), s=>{ follows=[]; s.forEach(d=>follows.push(d.data())); });
+onSnapshot(collection(db,'friends'), s=>{ friends=[]; s.forEach(d=>friends.push({id:d.id,...d.data()})); render(); renderFriends(); });
+onSnapshot(query(collection(db,'post_comments'), orderBy('createdAt','asc')), s=>{ comments=[]; s.forEach(d=>comments.push({id:d.id,...d.data()})); render(); });
+
+function renderFriends(){
+  const myName=getMyName(); if(!myName) return;
+  const reqs=friends.filter(f=>f.to===myName && f.status==='pending');
+  document.getElementById('reqBadge').innerHTML= reqs.length? `<span class="badge">${reqs.length}</span>`:'';
+  let h=''; reqs.forEach(r=>{ h+=`<div>${r.from} <button class="smallBtn" onclick="acceptF('${r.id}')">Accept</button> <button class="smallBtn" onclick="rejectF('${r.id}')">Reject</button></div>`; });
+  document.getElementById('friendReqs').innerHTML=h||'No requests';
+  const myFriends=friends.filter(f=> (f.from===myName||f.to===myName)&&f.status==='accepted').map(f=> f.from===myName? f.to: f.from);
+  document.getElementById('friendList').innerHTML= myFriends.join(', ')||'No friends';
 }
-loadFollowing();
+window.acceptF=async(id)=>{ await updateDoc(doc(db,'friends',id),{status:'accepted'}); };
+window.rejectF=async(id)=>{ await deleteDoc(doc(db,'friends',id)); };
+window.addFriend=async(t)=>{ const m=getMyName(); if(!m){alert('Put name');return;} if(m===t)return; if(friends.find(f=> (f.from===m&&f.to===t)||(f.from===t&&f.to===m))) {alert('Already sent');return;} await addDoc(collection(db,'friends'),{from:m,to:t,status:'pending',createdAt:serverTimestamp()}); alert('Request sent to '+t); };
+window.toggleFollow=async(t)=>{ const m=getMyName(); if(!m)return; const q=query(collection(db,'follows'),where('follower','==',m),where('following','==',t)); const s=await getDocs(q); if(!s.empty){for(const d of s.docs) await deleteDoc(doc(db,'follows',d.id));} else {await addDoc(collection(db,'follows'),{follower:m,following:t,createdAt:serverTimestamp()});} };
+window.toggleLike=async(pid)=>{ const m=getMyName(); if(!m){alert('Put name');return;} const q=query(collection(db,'likes'),where('postId','==',pid),where('user','==',m)); const s=await getDocs(q); if(!s.empty){for(const d of s.docs) await deleteDoc(doc(db,'likes',d.id));} else {await addDoc(collection(db,'likes'),{postId:pid,user:m,createdAt:serverTimestamp()});} };
+window.reshare=async(pid)=>{ const m=getMyName(); if(!m){alert('Put name');return;} const o=allPosts.find(p=>p.id===pid); await addDoc(collection(db,'connect_posts'),{name:m,reshareOf:o.name,reshareText:o.text,reshareFile:o.fileUrl,reshareFileType:o.fileType,reshareFileName:o.fileName,originalId:pid,createdAt:serverTimestamp()}); };
+window.makePost=async()=>{ const m=getMyName(); const t=textInput.value.trim(); const f=fileInput.files[0]; if(!m){alert('Put name');return;} if(!t&&!f){alert('Write or file');return;} document.getElementById('postBtn').disabled=true; let url='', ftype='', fname=''; try{ if(f){fname=f.name; ftype=f.type; const r=ref(storage,'connect_files/'+Date.now()+'_'+fname); await uploadBytes(r,f); url=await getDownloadURL(r);} await addDoc(collection(db,'connect_posts'),{name:m,text:t,fileUrl:url,fileType:ftype,fileName:fname,createdAt:serverTimestamp()}); textInput.value=''; fileInput.value=''; }catch(e){alert(e.message);} document.getElementById('postBtn').disabled=false; };
 
-window.toggleFollow=async(targetName)=>{
-  const me=nameInput.value.trim();
-  if(!me){alert('Put your name for top first');return;}
-  if(me===targetName){alert('You no fit follow yourself');return;}
-  const q=query(collection(db,'follows'), where('follower','==',me), where('following','==',targetName));
-  const snap=await getDocs(q);
-  if(!snap.empty){ // unfollow
-    for(const d of snap.docs){ await deleteDoc(doc(db,'follows',d.id)); }
-  }else{ // follow
-    await addDoc(collection(db,'follows'),{follower:me, following:targetName, createdAt:serverTimestamp()});
-  }
-  loadFollowing();
+window.addComment=async(postId)=>{
+  const m=getMyName(); if(!m){alert('Put name first');return;}
+  const input=document.getElementById('cInput_'+postId); const text=input.value.trim(); if(!text)return;
+  await addDoc(collection(db,'post_comments'),{postId, user:m, text, parentId:null, createdAt:serverTimestamp()}); input.value='';
 };
-
-window.makePost=async()=>{
-  const name=nameInput.value.trim(); const text=textInput.value.trim(); const file=fileInput.files[0];
-  if(!name){alert('Put name');return;} if(!text&&!file){alert('Write or select file');return;}
-  localStorage.setItem('unilibry_name',name);
-  document.getElementById('postBtn').disabled=true;
-  let fileUrl='', fileType='', fileName='';
-  try{
-    if(file){ fileName=file.name; fileType=file.type; const r=ref(storage,'connect_files/'+Date.now()+'_'+fileName); await uploadBytes(r,file); fileUrl=await getDownloadURL(r); }
-    await addDoc(collection(db,'connect_posts'),{name,text,fileUrl,fileType,fileName,createdAt:serverTimestamp()});
-    textInput.value=''; fileInput.value=''; document.getElementById('status').innerText='Posted ✅';
-  }catch(e){alert(e.message);}
-  document.getElementById('postBtn').disabled=false;
+window.addReply=async(postId, parentId)=>{
+  const m=getMyName(); if(!m){alert('Put name');return;}
+  const input=document.getElementById('rInput_'+parentId); const text=input.value.trim(); if(!text)return;
+  await addDoc(collection(db,'post_comments'),{postId, user:m, text, parentId, createdAt:serverTimestamp()}); input.value=''; document.getElementById('replyBox_'+parentId).style.display='none';
 };
+window.toggleReplyBox=(cid)=>{ const b=document.getElementById('replyBox_'+cid); b.style.display= b.style.display==='none'?'flex':'none'; };
 
-const qPosts=query(collection(db,'connect_posts'), orderBy('createdAt','desc'));
-onSnapshot(qPosts,(snap)=>{
-  allPosts=[]; snap.forEach(d=>{ allPosts.push({id:d.id,...d.data()}); }); renderFeed();
-});
-
-function renderFeed(){
-  let postsToShow = currentTab==='all'? allPosts : allPosts.filter(p=>followingList.includes(p.name));
-  if(postsToShow.length===0){ feedDiv.innerHTML= currentTab==='following'? 'You never follow anybody yet. Go All Schools tab and follow people!' : 'No posts yet'; return; }
-  const me=nameInput.value.trim();
+function render(){
+  const m=getMyName(); let filtered=allPosts;
+  if(currentTab==='friends'){ const myFriends=friends.filter(f=> (f.from===m||f.to===m)&&f.status==='accepted').map(f=> f.from===m? f.to: f.from); filtered=allPosts.filter(p=> myFriends.includes(p.name)||p.name===m); }
+  else if(currentTab==='following'){ const following=follows.filter(f=>f.follower===m).map(f=>f.following); filtered=allPosts.filter(p=> following.includes(p.name)); }
+  if(filtered.length===0){ feedDiv.innerHTML='No posts'; return; }
   let html='';
-  postsToShow.forEach(p=>{
-    const time=p.createdAt? p.createdAt.toDate().toLocaleString(): 'now';
-    const isFollowing=followingList.includes(p.name);
-    const followBtn = p.name!==me? `<button class="followBtn ${isFollowing?'following':''}" onclick="toggleFollow('${p.name.replace(/'/g,"\\'")}')">${isFollowing?'✓ Following':'Follow'}</button>` : '';
-    let fileHtml='';
-    if(p.fileUrl){
-      if(p.fileType&&p.fileType.startsWith('image/')) fileHtml=`<br><a href="${p.fileUrl}" target="_blank"><img src="${p.fileUrl}" style="max-width:100%;border-radius:10px;margin-top:6px"></a>`;
-      else fileHtml=`<br><a class="fileLink" href="${p.fileUrl}" target="_blank">📄 ${p.fileName||'File'}</a>`;
-    }
-    html+=`<div class="post"><b>${p.name}</b>${followBtn}<div>${p.text||''}</div>${fileHtml}<br><span class="time">${time}</span></div>`;
+  filtered.forEach(p=>{
+    const likeCount=likes.filter(l=>l.postId===p.id).length; const iLiked=likes.some(l=>l.postId===p.id && l.user===m);
+    const postComments=comments.filter(c=>c.postId===p.id);
+    const topComments=postComments.filter(c=>!c.parentId);
+    let content=`<div>${p.text||''}</div>`;
+    if(p.fileUrl){ if(p.fileType&&p.fileType.startsWith('image/')) content+=`<br><img src="${p.fileUrl}" style="max-width:100%;border-radius:10px">`; else content+=`<br><a href="${p.fileUrl}" target="_blank" style="background:#eef;padding:6px 10px;border-radius:8px;text-decoration:none">📄 ${p.fileName}</a>`; }
+    if(p.reshareOf){ content=`<div>🔁 Reshared from <b>${p.reshareOf}</b></div><div class="reshared">${p.reshareText||''}${p.reshareFile? (p.reshareFileType&&p.reshareFileType.startsWith('image/')? `<br><img src="${p.reshareFile}" style="max-width:100%">`: `<br><a href="${p.reshareFile}" target="_blank">📄 ${p.reshareFileName}</a>`):''}</div>`; }
+    let commentsHtml=`<div class="commentBox">`;
+    topComments.forEach(c=>{
+      const replies=postComments.filter(r=>r.parentId===c.id);
+      commentsHtml+=`<div class="comment"><b>${c.user}</b>: ${c.text} <button class="smallBtn" onclick="toggleReplyBox('${c.id}')">Reply</button>
+        <div id="replyBox_${c.id}" class="commentInput" style="display:none"><input id="rInput_${c.id}" placeholder="Reply to ${c.user}..."><button onclick="addReply('${p.id}','${c.id}')">Send</button></div>`;
+      replies.forEach(rep=>{ commentsHtml+=`<div class="reply"><b>${rep.user}</b>: ${rep.text}</div>`; });
+      commentsHtml+=`</div>`;
+    });
+    commentsHtml+=`<div class="commentInput"><input id="cInput_${p.id}" placeholder="Write a comment..."><button onclick="addComment('${p.id}')">Comment</button></div></div>`;
+
+    html+=`<div class="post"><b>${p.name}</b> ${p.name!==m? `<button class="smallBtn" onclick="addFriend('${p.name.replace(/'/g,"\\'")}')">+Friend</button><button class="smallBtn" onclick="toggleFollow('${p.name.replace(/'/g,"\\'")}')">Follow</button>`:''}
+    ${content}
+    <div class="actionBar"><button class="actionBtn ${iLiked?'liked':''}" onclick="toggleLike('${p.id}')">❤️ ${likeCount||''} Like</button><button class="actionBtn" onclick="reshare('${p.id}')">🔁 Reshare</button><span style="font-size:12px;color:gray">💬 ${topComments.length} Comments</span></div>
+    ${commentsHtml}
+    </div>`;
   });
   feedDiv.innerHTML=html;
 }
