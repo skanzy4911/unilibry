@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connect - UNILIBRY</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<style>
+body{font-family:system-ui;max-width:650px;margin:0 auto;padding:15px;background:#f0f2f5}
+.card{background:white;padding:15px;border-radius:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;box-sizing:border-box;font-size:15px}
+.btn{background:#0a3d62;color:white;border:none;padding:12px 20px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%}
+.topnav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.like-btn{color:#0a3d62;background:#e8f4ff;border:none;padding:5px 12px;border-radius:20px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="topnav">
+<h2 style="color:#0a3d62">UNILIBRY Connect</h2>
+<a href="index.html" style="text-decoration:none;font-weight:bold">📚 Library</a>
+</div>
+<div id="userStatus" style="font-size:12px;color:gray;margin-bottom:10px">Checking login...</div>
+
+<div class="card">
+<textarea id="postText" rows="3" placeholder="Wetin dey happen? Who get GST 101, BIO 101 note? Post here make all schools see am..."></textarea>
+<br><br>
+<button class="btn" onclick="createPost()">Post to All Schools</button>
+</div>
+
+<h3>Live Feed</h3>
+<div id="feed">Loading posts...</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCDYANrucniBvHZlsHpK4Yup2wP_kUrx3E",
+  authDomain: "unilibry.firebaseapp.com",
+  projectId: "unilibry",
+  storageBucket: "unilibry.firebasestorage.app",
+  messagingSenderId: "845103653428",
+  appId: "1:845103653428:web:e96c758914fcc2f82ba061",
+  measurementId: "G-2JEWVT2S6Z"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+auth.onAuthStateChanged(user=>{
+  if(!user){ document.getElementById("userStatus").innerHTML='You no login. <a href="login.html">Login first</a>'; return; }
+  document.getElementById("userStatus").innerText="Logged in as: "+user.email;
+  loadPosts();
+});
+
+function createPost(){
+  const text=document.getElementById("postText").value.trim();
+  if(!text) return alert("Write something first fah!");
+  db.collection("connect_posts").add({
+    text:text,
+    userEmail:auth.currentUser.email,
+    userId:auth.currentUser.uid,
+    likes:0,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{document.getElementById("postText").value=""; alert("Posted!");});
+}
+
+function loadPosts(){
+  db.collection("connect_posts").orderBy("createdAt","desc").limit(50).onSnapshot(snap=>{
+    let html="";
+    snap.forEach(d=>{
+      let p=d.data();
+      let time = p.createdAt ? p.createdAt.toDate().toLocaleString() : 'just now';
+      html+=`<div class="card"><b>${p.userEmail||'Student'}</b><br><br>${p.text}<br><br><small style="color:gray">${time}</small><br><br><button class="like-btn" onclick="likePost('${d.id}')">👍 Like ${p.likes||0}</button></div>`;
+    });
+    document.getElementById("feed").innerHTML=html||"No post yet, be the first to post!";
+  }, err=>{ document.getElementById("feed").innerHTML="Error: Allow read/write for connect_posts in Firestore Rules"; });
+}
+function likePost(id){ db.collection("connect_posts").doc(id).update({likes: firebase.firestore.FieldValue.increment(1)}); }
+</script>
+</body>
+</html>
