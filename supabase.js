@@ -2,5 +2,5 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 export const supabase = createClient(
   "https://sfrbglcogfyolqmczpqo.supabase.co",
-  "PASTE_YOUR_FULL_KEY_HERE"
+  "sb_publishable_gnRt1X1jpbvk6oPw8lLQpw_hqQUikls"
 )
